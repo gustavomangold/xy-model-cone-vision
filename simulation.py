@@ -13,11 +13,11 @@ def simulation_for_temperature(temperature):
         cax = axes.matshow(matrix_of_spins, cmap='hot', interpolation='nearest', rasterized=True)
         figure.colorbar(cax)
 
-        path_folder = '/Figures'
+        path_folder = '/Figures/'
         if not os.path.exists(path_folder):
             os.makedirs(path_folder)
 
-        plt.savefig(path_folder + '/initial_matrix-temperature=' + str(temperature) + '.png', dpi=400)
+        plt.savefig('Figures/final_configuration-temperature=' + str(temperature) + '.png', dpi=400)
 
         plt.clf()
 
@@ -42,17 +42,18 @@ def simulation_for_temperature(temperature):
         return 0.5*(1-math.tanh((energy_sampled-energy_new)/(2*T)))
 
     length         = 32
-    total_mc_steps = 500
-    #aprox. igual a 330º, usado no artigo
-    theta          = 2*math.pi*(330/360)
+    total_mc_steps = 5000
+    # igual a 330º, usado no artigo
+    theta          = 2*math.pi #*(330/360)
 
-    matrix_of_spins = np.zeros((length, length))
+    total_samples_in_step = length**2
+
+    matrix_of_spins         = np.zeros((length, length))
+    magnetizations_per_step = []
 
     for row in range(length):
         for column in range(length):
-            matrix_of_spins[row][column] = np.random.uniform(0, 2*math.pi)
-
-    print(calculate_magnetization(matrix_of_spins, length))
+            matrix_of_spins[row][column] = np.random.uniform(-math.pi, math.pi)
 
     #sempre verdadeiro pra rede quadrada
     angle_between_spin_and_neighbour_below = (3*math.pi)/2
@@ -61,7 +62,7 @@ def simulation_for_temperature(temperature):
     angle_between_spin_and_neighbour_right = 0 #(0*math.pi)/2
 
     for step in range(total_mc_steps):
-        for sample in range(length**2):
+        for sample in range(total_samples_in_step):
             sampled_row    = np.random.randint(0, length)
             sampled_column = np.random.randint(0, length)
 
@@ -76,23 +77,33 @@ def simulation_for_temperature(temperature):
             #vizinho a esquerda
             spin_neighbour_left  = matrix_of_spins[sampled_row][sampled_column - 1]
 
-            total_energy_sampled = coupling_constant(sampled_spin, angle_between_spin_and_neighbour_below, theta) * math.cos(sampled_spin - spin_neighbour_below) \
+            total_energy_sampled = - (coupling_constant(sampled_spin, angle_between_spin_and_neighbour_below, theta) * math.cos(sampled_spin - spin_neighbour_below) \
                                  + coupling_constant(sampled_spin, angle_between_spin_and_neighbour_right, theta) * math.cos(sampled_spin - spin_neighbour_right) \
                                  + coupling_constant(sampled_spin, angle_between_spin_and_neighbour_left, theta) * math.cos(sampled_spin - spin_neighbour_left) \
-                                 + coupling_constant(sampled_spin, angle_between_spin_and_neighbour_above, theta) * math.cos(sampled_spin - spin_neighbour_above)
+                                 + coupling_constant(sampled_spin, angle_between_spin_and_neighbour_above, theta) * math.cos(sampled_spin - spin_neighbour_above))
 
-            new_spin_candidate = np.random.uniform(0, 2*math.pi)
+            new_spin_candidate = sampled_spin + np.random.uniform(-0.2*math.pi, 0.2*math.pi)
 
-            total_energy_new    = coupling_constant(new_spin_candidate, angle_between_spin_and_neighbour_below, theta) * math.cos(sampled_spin - spin_neighbour_below) \
-                                + coupling_constant(new_spin_candidate, angle_between_spin_and_neighbour_right, theta) * math.cos(sampled_spin - spin_neighbour_right) \
-                                + coupling_constant(new_spin_candidate, angle_between_spin_and_neighbour_left, theta) * math.cos(sampled_spin - spin_neighbour_left) \
-                                + coupling_constant(new_spin_candidate, angle_between_spin_and_neighbour_above, theta) * math.cos(sampled_spin - spin_neighbour_above)
+            total_energy_new    = - (coupling_constant(new_spin_candidate, angle_between_spin_and_neighbour_below, theta) * math.cos(new_spin_candidate - spin_neighbour_below) \
+                                + coupling_constant(new_spin_candidate, angle_between_spin_and_neighbour_right, theta) * math.cos(new_spin_candidate - spin_neighbour_right) \
+                                + coupling_constant(new_spin_candidate, angle_between_spin_and_neighbour_left, theta) * math.cos(new_spin_candidate - spin_neighbour_left) \
+                                + coupling_constant(new_spin_candidate, angle_between_spin_and_neighbour_above, theta) * math.cos(new_spin_candidate - spin_neighbour_above))
 
             #glauber transition rate
-            if np.random.uniform(0, 1) < glauber(total_energy_sampled, total_energy_new, temperature):
+            #if np.random.uniform(0, 1) > glauber(total_energy_sampled, total_energy_new, temperature):
+            delta_energy = total_energy_new - total_energy_sampled
+            if delta_energy <= 0:
+                #print(total_energy_new, total_energy_sampled, glauber(total_energy_sampled, total_energy_new, temperature))
                 matrix_of_spins[sampled_row][sampled_column] = new_spin_candidate
+            else:
+                if np.random.uniform(0, 1) < np.exp(-delta_energy / temperature):
+                    matrix_of_spins[sampled_row][sampled_column] = new_spin_candidate
+        magnetizations_per_step.append(calculate_magnetization(matrix_of_spins, length))
 
     plot_snapshot(matrix_of_spins)
+    plt.plot(magnetizations_per_step)
+    plt.savefig('magnetization_temperature={:.2f}'.format(temperature))
+    plt.clf()
     print('Simulation for temperature T={:.2f} finished.'.format(temperature))
     return calculate_magnetization(matrix_of_spins, length)
 

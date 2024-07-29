@@ -4,7 +4,15 @@ import matplotlib.pyplot as plt
 import os
 import time
 import pickle
+import asyncio
 from   matplotlib.colors import ListedColormap as lcm
+
+#async wrapper function, it's a decorator for running in parallel
+def background(f):
+    def wrapped(*args, **kwargs):
+        return asyncio.get_event_loop().run_in_executor(None, f, *args, **kwargs)
+
+    return wrapped
 
 def plot_snapshot(matrix, identifier_string, temperature, step):
     figure = plt.figure()
@@ -77,9 +85,10 @@ def metropolis(delta_energy, temperature):
 def glauber(delta_energy, T):
     return 0.5*(1-math.tanh((delta_energy)/(2*T)))
 
+#@background
 def simulation_for_temperature(temperature, algorithm: str):
     length         = 32
-    total_mc_steps = 500
+    total_mc_steps = 50000
     # igual a 330º, usado no artigo
     theta          = 2*math.pi*(330/360)
 
@@ -151,15 +160,18 @@ def simulation_for_temperature(temperature, algorithm: str):
     return np.mean(magnetizations_per_step[-100])
 
 list_of_magnetizations = []
-range_of_temps         = np.arange(0.1, 1.4, 0.1)
+range_of_temps         = np.arange(0.2, 1.4, 0.1)
 algorithm              = 'glauber'
 
 start_time = time.time()
 for temperature in range_of_temps:
+    time_for_temperature = time.time()
     magnetization = simulation_for_temperature(temperature, algorithm)
-    print('Time taken for temperature: {:.4f}s\n'.format(time.time() - start_time) +
+    print('Time taken for temperature: {:.4f}s\n'.format(time.time() - time_for_temperature) +
         'Magnetization = {:.6f}\n'.format(magnetization))
     list_of_magnetizations.append(magnetization)
+
+print('Time for whole simulation: {:.4f}s'.format(time.time() - start_time))
 
 plot_magnetization_versus_temperature(range_of_temps, list_of_magnetizations, 'algorithm=' + algorithm
     + 'range_of_temperatures:' + str(range_of_temps[0]) + 'to' + str(range_of_temps[-1]))

@@ -50,6 +50,7 @@ void initialize(double *spin, int **neigh);
 void mc_routine(double *spin, int **neigh, double TEMP);
 void print_states(double *spin, double TEMP, int choice);
 void gnuplot_view(int tempo, double *spin);
+void calculate_magnetization(double *spin);
 
 /*****************************************************************************
  *                             MAIN PROGRAM                                  *
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
 
 	sprintf(Arq1, "temp_T%.3lfL%dS%ld.dat", TEMP, L, seed);
 	arq1 = fopen(Arq1, "w");
-	fprintf(arq1, "#seed = %ld\n#MCS,ET\n", seed);
+	fprintf(arq1, "#seed = %ld\n#MCS, ET, M\n", seed);
 #endif
 
 	for(mcs=0; mcs<TMAX; mcs++)
@@ -104,7 +105,7 @@ int main(int argc, char *argv[])
 		EE += (ET*ET);
 
 #ifdef DATA
-		fprintf(arq1, "%d,%f\n", mcs, ET);
+		fprintf(arq1, "%d, %f, %f\n", mcs, ET, M);
 #endif
 	}
 
@@ -150,6 +151,21 @@ void initialize(double *spin, int **neigh)
 	}
 
 	return;
+}
+
+void calculate_magnetization(double *spin) {
+
+    double sum_sines, sum_cosines;
+
+    sum_sines   = 0;
+    sum_cosines = 0;
+
+    for (int i = 0; i < L2; i++) {
+        sum_sines   += sin(spin[i]);
+        sum_cosines += cos(spin[i]);
+    }
+
+    M = sqrt(pow(sum_sines, 2) + pow(sum_cosines, 2));
 }
 
 /*****************************************************************************

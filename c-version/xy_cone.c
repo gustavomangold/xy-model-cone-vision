@@ -28,18 +28,18 @@
 /*****************************************************************************
  *                               DEFINITIONS                                 *
  ****************************************************************************/
-#define 		L			16
+#define 		L			32
 #define 		L2 	 		(L*L)
 #define 		TRAN			1000
-#define 		TMAX			1000000
+#define 		TMAX			10000
 #define			N			4.0
 #define 		MIN(a,b) 		(((a)<(b))?(a):(b))
 
 /*****************************************************************************
  *                           GLOBAL VARIABLES                                *
  ****************************************************************************/
-double dE, M, ET;
-double EE, MM;
+double dE, M, ET, U, CV;
+double EE, ET2, M2, M4;
 int J;
 double THETA;
 
@@ -50,7 +50,7 @@ void initialize(double *spin, int **neigh);
 void mc_routine(double *spin, int **neigh, double TEMP);
 void print_states(double *spin, double TEMP, int choice);
 void gnuplot_view(int tempo, double *spin);
-void calculate_magnetization(double *spin);
+void calculate_quantities(double *spin, double TEMP);
 
 /*****************************************************************************
  *                             MAIN PROGRAM                                  *
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 
 	sprintf(Arq1, "temp_T%.3lfL%dS%ld.dat", TEMP, L, seed);
 	arq1 = fopen(Arq1, "w");
-	fprintf(arq1, "#seed = %ld\n#MCS, ET, M\n", seed);
+	fprintf(arq1, "#seed = %ld\n#MCS,ET,M,M2,M4,U,ET2,CV,EE\n", seed);
 #endif
 
 	for(mcs=0; mcs<TMAX; mcs++)
@@ -102,12 +102,12 @@ int main(int argc, char *argv[])
 #ifdef GNU
                 gnuplot_view(mcs,spin);
 #endif
-		EE += (ET*ET);
 
 #ifdef DATA
-		fprintf(arq1, "%d, %f, %f\n", mcs, ET, M);
+		fprintf(arq1, "%d,%f,%f,%f,%f,%f,%f,%f,%f\n", mcs, ET, M, M2, M4, U, ET2, CV, EE);
 #endif
 	}
+	EE += ET*ET;
 
 	print_states(spin, TEMP, 1);
 
@@ -153,19 +153,35 @@ void initialize(double *spin, int **neigh)
 	return;
 }
 
-void calculate_magnetization(double *spin) {
+/*****************************************************************************
+ *                     	      CALCULATE QUANTITIES                           *
+ ****************************************************************************/
+void calculate_quantities(double *spin, double TEMP){
+    double sum_sines = 0;
+    double sum_cosines = 0;
+    double sum_sines_squared = 0;
+    double sum_cosines_squared = 0;
+    double sum_sines_fourth = 0;
+    double sum_cosines_fourth = 0;
+    int    i;
 
-    double sum_sines, sum_cosines;
-
-    sum_sines   = 0;
-    sum_cosines = 0;
-
-    for (int i = 0; i < L2; i++) {
-        sum_sines   += sin(spin[i]);
-        sum_cosines += cos(spin[i]);
+    for(i = 0; i < L2; i++){
+        sum_sines           += sin(spin[i]);
+        sum_cosines         += cos(spin[i]);
+        sum_sines_squared   += sin(spin[i]) * sin(spin[i]);
+        sum_cosines_squared += cos(spin[i]) * cos(spin[i]);
+        sum_sines_fourth    += sin(spin[i]) * sin(spin[i]) * sin(spin[i]) * sin(spin[i]);
+        sum_cosines_fourth  += cos(spin[i]) * cos(spin[i]) * cos(spin[i]) * cos(spin[i]);
     }
 
-    M = sqrt(pow(sum_sines, 2) + pow(sum_cosines, 2));
+    M  = sqrt(sum_sines*sum_sines + sum_cosines*sum_cosines) / L2;
+    M2 = sqrt(sum_sines_squared*sum_sines_squared + sum_cosines_squared*sum_cosines_squared) / (L2);
+    M4 = sqrt(sum_sines_fourth*sum_sines_fourth + sum_cosines_fourth*sum_cosines_fourth) / (L2);
+
+    //binder cummulant
+    U  = 1 - (M4)/(3 * M2*M2);
+
+    CV = fabs((ET2) / L2 - (ET)*(ET)/(L2*L2)) / (TEMP*TEMP) ;
 }
 
 /*****************************************************************************
@@ -174,7 +190,7 @@ void calculate_magnetization(double *spin) {
 void mc_routine(double *spin, int **neigh, double TEMP)
 {
 	int i, j, t;
-	double Ei, Ef, G;
+	double Ei, Ef, G, final_individual_energy;
 	double vi, D_ang, min_ang;
 	double flip;
 
@@ -234,7 +250,8 @@ void mc_routine(double *spin, int **neigh, double TEMP)
 		}
 	}
 
-	ET = 0;
+	ET  = 0;
+	ET2 = 0;
 
 	for(i=0; i<L2; i++)
 	{
@@ -254,9 +271,16 @@ void mc_routine(double *spin, int **neigh, double TEMP)
 				J=0;
 			}
 
-			ET += J*(cos(spin[i]-spin[neigh[i][j]]));
+			final_individual_energy = J*(cos(spin[i]-spin[neigh[i][j]]));
+
+			ET  += final_individual_energy;
+			ET2 += final_individual_energy * final_individual_energy;
 		}
 	}
+
+	EE = ET * ET;
+
+	calculate_quantities(spin, TEMP);
 
 	return;
 }

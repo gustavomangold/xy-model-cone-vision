@@ -30,8 +30,8 @@
  ****************************************************************************/
 #define 		L			32
 #define 		L2 	 		(L*L)
-#define 		TRAN			1000
-#define 		TMAX			10000
+#define 		TRAN			20000
+#define 		TMAX			50000
 #define			N			4.0
 #define 		MIN(a,b) 		(((a)<(b))?(a):(b))
 
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	int i;
 	double TEMP, CPU_TIME;
 
-	TEMP = atof(argv[1]);
+	TEMP = atof(argv[1]) / 100;
 	THETA = 2*M_PI*((atof(argv[2]))/360);
 
 	double *spin;
@@ -91,9 +91,10 @@ int main(int argc, char *argv[])
 	char Arq1[100];
 	FILE *arq1;
 
-	sprintf(Arq1, "temp_T%.3lfL%dS%ld.dat", TEMP, L, seed);
+	sprintf(Arq1, "temp_T%.3lfTheta=%.0lfL%dS%ld.dat", TEMP, atof(argv[2]), L, seed);
 	arq1 = fopen(Arq1, "w");
-	fprintf(arq1, "#seed = %ld\n#MCS,ET,M,M2,M4,U,ET2,CV,EE\n", seed);
+	//fprintf(arq1, "#seed = %ld\n#MCS,ET,M,M2,M4,U,ET2,CV,EE\n", seed);
+	fprintf(arq1, "#seed = %ld\n#MCS,M\n", seed);
 #endif
 
 	for(mcs=0; mcs<TMAX; mcs++)
@@ -104,7 +105,8 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef DATA
-		fprintf(arq1, "%d,%f,%f,%f,%f,%f,%f,%f,%f\n", mcs, ET, M, M2, M4, U, ET2, CV, EE);
+		//fprintf(arq1, "%d,%f,%f,%f,%f,%f,%f,%f,%f\n", mcs, ET, M, M2, M4, U, ET2, CV, EE);
+		fprintf(arq1, "%d,%f\n", mcs, M);
 #endif
 	}
 	EE += ET*ET;

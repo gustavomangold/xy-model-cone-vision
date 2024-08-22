@@ -169,14 +169,14 @@ void calculate_quantities(double *spin, double TEMP){
     int    i;
 
     for(i = 0; i < L2; i++){
-        sum_sines           += sin(spin[i]);
-        sum_cosines         += cos(spin[i]);
+      sum_sines           += sin(spin[i]);
+      sum_cosines         += cos(spin[i]);
 
-        sum_sines_squared   += sin(spin[i]) * sin(spin[i]);
-        sum_cosines_squared += cos(spin[i]) * cos(spin[i]);
+      sum_sines_squared   += sin(spin[i]) * sin(spin[i]);
+      sum_cosines_squared += cos(spin[i]) * cos(spin[i]);
 
-        sum_sines_fourth    += sin(spin[i]) * sin(spin[i]) * sin(spin[i]) * sin(spin[i]);
-        sum_cosines_fourth  += cos(spin[i]) * cos(spin[i]) * cos(spin[i]) * cos(spin[i]);
+      sum_sines_fourth    += sin(spin[i]) * sin(spin[i]) * sin(spin[i]) * sin(spin[i]);
+      sum_cosines_fourth  += cos(spin[i]) * cos(spin[i]) * cos(spin[i]) * cos(spin[i]);
     }
 
     M  = sqrt(sum_sines*sum_sines + sum_cosines * sum_cosines) / L2;

@@ -159,6 +159,7 @@ void initialize(double *spin, int **neigh)
  *                     	      CALCULATE QUANTITIES                           *
  ****************************************************************************/
 void calculate_quantities(double *spin, double TEMP){
+    // eu sou jesus
     double sum_sines = 0;
     double sum_cosines = 0;
     double sum_sines_squared = 0;

@@ -7,7 +7,7 @@ from   matplotlib import cm
 
 magnetization_versus_temp_and_theta_dict = {}
 
-total_values_for_mean = 100
+total_values_for_mean = 1000
 theta_list         = []
 temperature_list   = []
 magnetization_list = []
@@ -38,6 +38,8 @@ for filename in glob.glob("heatmap_data/*.dat"):
 #for i in range(0, 100):
 #    print(theta_list[i], temperature_list[i], magnetization_list[i])
 
+#nao entendi pq deu o formato errado, mas isso resolve pra alguns casos..
+
 x = np.unique(temperature_list)
 y = np.unique(theta_list)
 X, Y = np.meshgrid(x,y)
@@ -56,7 +58,7 @@ cbar.ax.set_ylabel('magnetization')
 plt.savefig('heatmap_mag_versus_T_and_theta.png', dpi=400)
 plt.clf()
 
-dict_mag_versus_theta_and_temperature = {}
+'''dict_mag_versus_theta_and_temperature = {}
 
 for index in range(len(theta_list)):
     if theta_list[index] not in dict_mag_versus_theta_and_temperature[theta_list[index]].keys():
@@ -71,4 +73,4 @@ for index in range(len(theta_list)):
 
 plt.legend(loc='upper right')
 
-plt.savefig('simple_plot.png', dpi = 400)
+plt.savefig('simple_plot.png', dpi = 400)'''

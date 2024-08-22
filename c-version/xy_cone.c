@@ -28,10 +28,10 @@
 /*****************************************************************************
  *                               DEFINITIONS                                 *
  ****************************************************************************/
-#define 		L			32
+#define 		L			16
 #define 		L2 	 		(L*L)
-#define 		TRAN			20000
-#define 		TMAX			50000
+#define 		TRAN			50000
+#define 		TMAX			60000
 #define			N			4.0
 #define 		MIN(a,b) 		(((a)<(b))?(a):(b))
 
@@ -94,19 +94,19 @@ int main(int argc, char *argv[])
 	sprintf(Arq1, "temp_T%.3lfTheta=%.0lfL%dS%ld.dat", TEMP, atof(argv[2]), L, seed);
 	arq1 = fopen(Arq1, "w");
 	//fprintf(arq1, "#seed = %ld\n#MCS,ET,M,M2,M4,U,ET2,CV,EE\n", seed);
-	fprintf(arq1, "#seed = %ld\n#MCS,M\n", seed);
+	fprintf(arq1, "#seed = %ld\n#MCS,M,U,CV\n", seed);
 #endif
 
 	for(mcs=0; mcs<TMAX; mcs++)
 	{
 		mc_routine(spin, neigh, TEMP);
 #ifdef GNU
-                gnuplot_view(mcs,spin);
+        gnuplot_view(mcs,spin);
 #endif
 
 #ifdef DATA
 		//fprintf(arq1, "%d,%f,%f,%f,%f,%f,%f,%f,%f\n", mcs, ET, M, M2, M4, U, ET2, CV, EE);
-		fprintf(arq1, "%d,%f\n", mcs, M);
+		fprintf(arq1, "%d,%f,%f,%f\n", mcs, M, U, CV);
 #endif
 	}
 	EE += ET*ET;
@@ -170,20 +170,22 @@ void calculate_quantities(double *spin, double TEMP){
     for(i = 0; i < L2; i++){
         sum_sines           += sin(spin[i]);
         sum_cosines         += cos(spin[i]);
+
         sum_sines_squared   += sin(spin[i]) * sin(spin[i]);
         sum_cosines_squared += cos(spin[i]) * cos(spin[i]);
+
         sum_sines_fourth    += sin(spin[i]) * sin(spin[i]) * sin(spin[i]) * sin(spin[i]);
         sum_cosines_fourth  += cos(spin[i]) * cos(spin[i]) * cos(spin[i]) * cos(spin[i]);
     }
 
-    M  = sqrt(sum_sines*sum_sines + sum_cosines*sum_cosines) / L2;
+    M  = sqrt(sum_sines*sum_sines + sum_cosines * sum_cosines) / L2;
     M2 = sqrt(sum_sines_squared*sum_sines_squared + sum_cosines_squared*sum_cosines_squared) / (L2);
     M4 = sqrt(sum_sines_fourth*sum_sines_fourth + sum_cosines_fourth*sum_cosines_fourth) / (L2);
 
     //binder cummulant
     U  = 1 - (M4)/(3 * M2*M2);
 
-    CV = fabs((ET2) / L2 - (ET)*(ET)/(L2*L2)) / (TEMP*TEMP) ;
+    CV = fabs((ET2) - (ET)*(ET)) / (L2*TEMP*TEMP) ;
 }
 
 /*****************************************************************************
@@ -220,7 +222,7 @@ void mc_routine(double *spin, int **neigh, double TEMP)
                         Ei += J*(cos(spin[i]-spin[neigh[i][j]]));
 		}
 
-		flip = 2*M_PI*FRANDOM;
+		flip = spin[i] + M_PI*(FRANDOM - 0.5);
 
 		Ef = 0;
 		for(j=0; j<4; j++)

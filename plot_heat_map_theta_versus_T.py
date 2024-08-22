@@ -16,24 +16,26 @@ for filename in glob.glob("heatmap_data/*.dat"):
     # toda essa parte de dar match nas strings eh horroroso, horrivel
     numbers = re.findall(r'\d+', filename)
 
-    temperature = (float("{}.{}".format(numbers[0], numbers[1])))
-    theta       = int(numbers[2])
-    seed        = int(numbers[-1])
+    temperature  = (float("{}.{}".format(numbers[0], numbers[1])))
+    theta        = int(numbers[2])
+    lattice_size = int(numbers[3])
+    seed         = int(numbers[-1])
 
-    last_values_for_mean = np.array(pd.DataFrame(pd.read_csv(filename, dtype=str))
-        ["#seed = {}".format(seed)].iloc[-total_values_for_mean:])
+    if lattice_size == 32:
+        last_values_for_mean = np.array(pd.DataFrame(pd.read_csv(filename, dtype=str))
+            ["#seed = {}".format(seed)].iloc[-total_values_for_mean:])
 
-    mean_magnetization = 0
+        mean_magnetization = 0
 
-    # isso aqui tb ta mt estupido
-    for value in last_values_for_mean:
-        mean_magnetization += float(value)
+        # isso aqui tb ta mt estupido
+        for value in last_values_for_mean:
+            mean_magnetization += float(value)
 
-    mean_magnetization = mean_magnetization / total_values_for_mean
+        mean_magnetization = mean_magnetization / total_values_for_mean
 
-    theta_list.append(theta)
-    temperature_list.append(temperature)
-    magnetization_list.append(mean_magnetization)
+        theta_list.append(theta)
+        temperature_list.append(temperature)
+        magnetization_list.append(mean_magnetization)
 
 #for i in range(0, 100):
 #    print(theta_list[i], temperature_list[i], magnetization_list[i])

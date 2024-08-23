@@ -30,8 +30,8 @@
  ****************************************************************************/
 #define 		L			16
 #define 		L2 	 		(L*L)
-#define 		TRAN			10000
-#define 		TMAX			15000
+#define 		TRAN			100000
+#define 		TMAX			5000
 #define			N			4.0
 #define 		MIN(a,b) 		(((a)<(b))?(a):(b))
 
@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef DATA
-		//fprintf(arq1, "%d,%f,%f,%f,%f,%f,%f,%f,%f\n", mcs, ET, M, M2, M4, U, ET2, CV, EE);
-		fprintf(arq1, "%d,%f,%f,%f\n", mcs, M, U, CV);
+	//fprintf(arq1, "%d,%f,%f,%f,%f,%f,%f,%f,%f\n", mcs, ET, M, M2, M4, U, ET2, CV, EE);
+	fprintf(arq1, "%d,%f,%f,%f\n", mcs, M, U, CV);
 #endif
 	}
 	EE += ET*ET;
@@ -148,9 +148,9 @@ void initialize(double *spin, int **neigh)
 	for(i=0; i<L2; i++)
 	{
 		neigh[i][0] = (i-L+L2)%L2;              //up
-                neigh[i][1] = (i+1)%L + (i/L)*L;        //right
-                neigh[i][2] = (i+L)%L2;                 //down
-                neigh[i][3] = (i-1+L)%L + (i/L)*L;      //left
+        neigh[i][1] = (i+1)%L + (i/L)*L;        //right
+        neigh[i][2] = (i+L)%L2;                 //down
+        neigh[i][3] = (i-1+L)%L + (i/L)*L;      //left
 	}
 
 	return;
@@ -187,7 +187,7 @@ void calculate_quantities(double *spin, double TEMP){
     //binder cummulant
     U  = 1 - (M4)/(3 * M2*M2);
 
-    CV = fabs((ET2) - (ET)*(ET)) / (L2*TEMP*TEMP) ;
+    CV = fabs((ET2 / L2) - (ET / L2)*(ET / L2)) / (L2*TEMP*TEMP) ;
 }
 
 /*****************************************************************************
@@ -212,14 +212,17 @@ void mc_routine(double *spin, int **neigh, double TEMP)
                         D_ang = fabs(spin[i]-vi);
                         min_ang = MIN((2*M_PI) -D_ang,D_ang);
 
-                        if(min_ang < THETA/2)
+                        //otimizaçao da parte de baixo
+                        J = (min_ang < THETA/2);
+
+                            /*if(min_ang < THETA/2)
                         {
                                 J=1;
                         }
                         else
                         {
                                 J=0;
-                        }
+                        }*/
 
                         Ei += J*(cos(spin[i]-spin[neigh[i][j]]));
 		}
@@ -234,14 +237,17 @@ void mc_routine(double *spin, int **neigh, double TEMP)
                         D_ang = fabs(flip-vi);
                         min_ang = MIN((2*M_PI) -D_ang,D_ang);
 
-                        if(min_ang < THETA/2)
+                        //otimizaçao da parte de baixo
+                        J = (min_ang < THETA/2);
+
+                            /*if(min_ang < THETA/2)
                         {
                                 J=1;
                         }
                         else
                         {
                                 J=0;
-                        }
+                        }*/
 
                         Ef += J*(cos(flip-spin[neigh[i][j]]));
 		}
@@ -268,14 +274,8 @@ void mc_routine(double *spin, int **neigh, double TEMP)
 			D_ang = fabs(spin[i]-vi);
 			min_ang = MIN((2*M_PI) -D_ang,D_ang);
 
-			if(min_ang < THETA/2)
-			{
-				J=1;
-			}
-			else
-			{
-				J=0;
-			}
+			//otimizaçao
+            J = (min_ang < THETA/2);
 
 			final_individual_energy = J*(cos(spin[i]-spin[neigh[i][j]]));
 

@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	sprintf(Arq1, "temp_T%.3lfTheta=%.0lfL%dS%ld.dat", TEMP, atof(argv[2]), L, seed);
 	arq1 = fopen(Arq1, "w");
 	//fprintf(arq1, "#seed = %ld\n#MCS,ET,M,M2,M4,U,ET2,CV,EE\n", seed);
-	fprintf(arq1, "#seed = %ld\n#MCS,M,U,CV\n", seed);
+	fprintf(arq1, "#seed = %ld\n#MCS,M,U\n", seed);
 #endif
 
 	for(mcs=0; mcs<TMAX; mcs++)
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 
 #ifdef DATA
 	//fprintf(arq1, "%d,%f,%f,%f,%f,%f,%f,%f,%f\n", mcs, ET, M, M2, M4, U, ET2, CV, EE);
-	fprintf(arq1, "%d,%f,%f,%f\n", mcs, M, U, CV);
+	fprintf(arq1, "%d,%f,%f\n", mcs, M, U);
 #endif
 	}
 	EE += ET*ET;
@@ -187,7 +187,9 @@ void calculate_quantities(double *spin, double TEMP){
     //binder cummulant
     U  = 1 - (M4)/(3 * M2*M2);
 
-    CV = fabs((ET2 / L2) - (ET / L2)*(ET / L2)) / (L2*TEMP*TEMP) ;
+    CV = fabs((ET2 / L2) - (ET / L2)*(ET / L2)) / (TEMP*TEMP);
+
+    printf("mean energy squared per spin = %f, (mean energy) squared per spin = %f \n", (ET2 / L2), (ET / L2)*(ET / L2));
 }
 
 /*****************************************************************************
@@ -227,7 +229,7 @@ void mc_routine(double *spin, int **neigh, double TEMP)
                         Ei += J*(cos(spin[i]-spin[neigh[i][j]]));
 		}
 
-		flip = spin[i] + M_PI*(FRANDOM - 0.5);
+		flip = (spin[i] + M_PI*(FRANDOM - 0.5));
 
 		Ef = 0;
 		for(j=0; j<4; j++)
@@ -267,6 +269,7 @@ void mc_routine(double *spin, int **neigh, double TEMP)
 
 	for(i=0; i<L2; i++)
 	{
+	    final_individual_energy = 0;
 		for(j=0;j<4;j++)
 		{
 			vi = 1+j;
@@ -277,11 +280,12 @@ void mc_routine(double *spin, int **neigh, double TEMP)
 			//otimizaçao
             J = (min_ang < THETA/2);
 
-			final_individual_energy = J*(cos(spin[i]-spin[neigh[i][j]]));
+			final_individual_energy += J * (cos(spin[i]-spin[neigh[i][j]]));
 
-			ET  += final_individual_energy;
-			ET2 += final_individual_energy * final_individual_energy;
+			printf("%f %f %f \n \n", cos(spin[i]-spin[neigh[i][j]]), spin[i]-spin[neigh[i][j]], spin[i]);
 		}
+		ET  += final_individual_energy;
+		ET2 += final_individual_energy * final_individual_energy;
 	}
 
 	EE = ET * ET;

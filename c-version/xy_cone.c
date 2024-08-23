@@ -30,8 +30,8 @@
  ****************************************************************************/
 #define 		L			16
 #define 		L2 	 		(L*L)
-#define 		TRAN			50000
-#define 		TMAX			60000
+#define 		TRAN			10000
+#define 		TMAX			15000
 #define			N			4.0
 #define 		MIN(a,b) 		(((a)<(b))?(a):(b))
 
@@ -40,7 +40,7 @@
  ****************************************************************************/
 double dE, M, ET, U, CV;
 double EE, ET2, M2, M4;
-int J;
+int J, THETA_DEGREES;
 double THETA;
 
 /*****************************************************************************
@@ -65,7 +65,8 @@ int main(int argc, char *argv[])
 	double TEMP, CPU_TIME;
 
 	TEMP = atof(argv[1]) / 100;
-	THETA = 2*M_PI*((atof(argv[2]))/360);
+	THETA_DEGREES = atof(argv[2]);
+	THETA = 2*M_PI*(THETA_DEGREES/360);
 
 	double *spin;
 	int **neigh;
@@ -111,7 +112,7 @@ int main(int argc, char *argv[])
 	}
 	EE += ET*ET;
 
-	print_states(spin, TEMP, 1);
+	print_states(spin, TEMP, 0);
 
 #ifdef DATA
 	fclose(arq1);
@@ -295,29 +296,36 @@ void mc_routine(double *spin, int **neigh, double TEMP)
  ****************************************************************************/
 void print_states(double *spin, double TEMP, int choice)
 {
-        int i, j;
+        int i;
 
-	if(choice == 0)
-        {
-                char fp[100];
-                FILE *fp1;
-
-                sprintf(fp, "state_T%.3lfL%dS%ld.dat", TEMP, L, seed);
-                fp1 = fopen(fp, "w");
-
-                for(i=0; i<L; i++)
+        if(choice == 0)
                 {
-                        for(j=0; j<L; j++)
+                        char fp[100];
+                        FILE *fp1;
+		sprintf(fp, "finalconfig_T%.3lfL%dA%dS%ld.dat", TEMP, L, THETA_DEGREES, seed);
+                        fp1 = fopen(fp, "w");
+
+		for(i=0; i<L2; i++)
+		{
+			fprintf(fp1, "%f ", spin[i]);
+		}
+
+        /*
+		esse jeito printa em formato LxL quadrado
+                        for(i=0; i<L; i++)
                         {
-                                fprintf(fp1, "%f ", spin[i + j*L]);
+			for(j=0; j<L; j++)
+                                {
+                                        fprintf(fp1, "%f ", spin[i + j*L]);
+                                }
+                                fprintf(fp1, "\n");
                         }
-                        fprintf(fp1, "\n");
+        */
+
+                        fclose(fp1);
                 }
 
-                fclose(fp1);
-        }
-
-       	return;
+               	return;
 }
 
 /**************************************************************************

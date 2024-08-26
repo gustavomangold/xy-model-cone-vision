@@ -5,74 +5,113 @@ import re
 import matplotlib.pyplot as plt
 from   matplotlib import cm
 
-magnetization_versus_temp_and_theta_dict = {}
+def plot_quantity_versus_temperature(dict_key_is_theta, quantity_id: str):
+    if quantity_id == 'binder-cummulant':
+        plt.ylim(0.63, 0.67)
+        plt.xlim(0.3, 1.0)
+        plt.title('Binder Cummulant for L=32')
+        plt.xlabel('T')
+        plt.ylabel('1-<m^4>/(3<m^2>^2)')
+    else:
+        plt.xlim(0.25, 1.2)
+        plt.ylim(0.05, 1.05)
+        plt.title('Magnetization for L=32')
+        plt.xlabel('T')
+        plt.ylabel('<m>')
 
-total_values_for_mean = 1000
-theta_list         = []
-temperature_list   = []
-magnetization_list = []
+    colormap = ['red', 'blue', 'cyan', 'black']
+    markers  = ['*', 'p', 'o', 'v']
 
-for filename in glob.glob("heatmap_data/*.dat"):
-    # toda essa parte de dar match nas strings eh horroroso, horrivel
+    index = 0
+    for theta in dict_key_is_theta.keys():
+        if not theta % 45 and len(dict_key_is_theta[theta]) > 50:
+            plt.scatter(*zip(*dict_key_is_theta[theta]), marker = markers[index % len(markers)],
+                color = colormap[index % len(colormap)], label = 'Cone angle: ' + str(theta) + 'º')
+            #plt.plot(*zip(*dict_key_is_theta[theta]), marker = 'o', color = color, alpha = 0.4)
+            plt.legend(fontsize = 'small')
+            index += 1
+
+    plt.savefig(quantity_id + '.png', dpi = 400)
+    plt.clf()
+
+def plot_heatmap(temperature_list, theta_list, magnetization_list):
+    x = np.unique(temperature_list)
+    y = np.unique(theta_list)
+    X, Y = np.meshgrid(x,y)
+
+    Z = np.array(magnetization_list).reshape(len(y),len(x))
+
+    print(X, Y, Z)
+
+    fig1, ax2 = plt.subplots(layout='constrained')
+    CS = ax2.contourf(X, Y, Z, 10, cmap=plt.cm.bone)
+
+    ax2.set_xlabel('temperature')
+    ax2.set_ylabel('theta')
+
+    cbar = fig1.colorbar(CS)
+    cbar.ax.set_ylabel('magnetization')
+
+    plt.savefig('heatmap_mag_versus_T_and_theta.png', dpi=400)
+    plt.clf()
+
+def get_data_for_heatmap(filename):
+    total_values_for_mean = 5000
+    mean_magnetization    = 0
+    mean_binder_cummulant = 0
+    # toda essa parte de dar match nas strings eh horroroso
     numbers = re.findall(r'\d+', filename)
 
-    temperature  = (float("{}.{}".format(numbers[0], numbers[1])))
-    theta        = int(numbers[2])
-    lattice_size = int(numbers[3])
-    seed         = int(numbers[-1])
+    if 'temp' in filename:
+        temperature  = (float("{}.{}".format(numbers[0], numbers[1])))
+        theta        = int(numbers[2])
+        lattice_size = int(numbers[3])
+        seed         = int(numbers[-1])
 
-    if lattice_size == 32:
-        last_values_for_mean = np.array(pd.DataFrame(pd.read_csv(filename, dtype=str))
-            ["#seed = {}".format(seed)].iloc[-total_values_for_mean:])
+        if lattice_size == 32:
+            dataframe = pd.DataFrame(pd.read_csv(filename, dtype=str, skiprows = 1))
 
-        mean_magnetization = 0
+            last_values_for_mean_magnetization = dataframe['M'].iloc[:]
+            last_values_for_binder_cummulant   = dataframe['U'].iloc[:]
 
-        # isso aqui tb ta mt estupido
-        for value in last_values_for_mean:
-            mean_magnetization += float(value)
+            mean_magnetization    = np.mean(np.float64(last_values_for_mean_magnetization))
+            mean_binder_cummulant = np.mean(np.float64(last_values_for_binder_cummulant))
 
-        mean_magnetization = mean_magnetization / total_values_for_mean
+        return theta, temperature, mean_magnetization, mean_binder_cummulant
+    return 0, 0, 0, 0
 
-        theta_list.append(theta)
-        temperature_list.append(temperature)
-        magnetization_list.append(mean_magnetization)
+magnetization_versus_temp_and_theta_dict = {}
 
-#for i in range(0, 100):
-#    print(theta_list[i], temperature_list[i], magnetization_list[i])
+theta_list            = []
+temperature_list      = []
+magnetization_list    = []
 
-#nao entendi pq deu o formato errado, mas isso resolve pra alguns casos..
+dict_to_plot_magnetization = {}
+# nome suspeito de variavel
+dict_to_plot_binder_cumm   = {}
 
-x = np.unique(temperature_list)
-y = np.unique(theta_list)
-X, Y = np.meshgrid(x,y)
+for filename in glob.glob("data/*.dat"):
+    theta, temperature, mean_magnetization, binder_cummulant = get_data_for_heatmap(filename)
 
-Z = np.array(magnetization_list).reshape(len(y),len(x))
+    if (theta != 0):
+        if not ((theta in theta_list) and (temperature in temperature_list)
+            and (mean_magnetization in magnetization_list)):
+            theta_list.append(theta)
+            temperature_list.append(temperature)
+            magnetization_list.append(mean_magnetization)
 
-fig1, ax2 = plt.subplots(layout='constrained')
-CS = ax2.contourf(X, Y, Z, 10, cmap=plt.cm.bone)
+        if theta in dict_to_plot_magnetization.keys():
+            dict_to_plot_magnetization[theta].append([temperature, mean_magnetization])
+            dict_to_plot_binder_cumm[theta].append([temperature, binder_cummulant])
+        else:
+            dict_to_plot_magnetization[theta] = [[temperature, mean_magnetization]]
+            dict_to_plot_binder_cumm[theta]   = [[temperature, binder_cummulant]]
 
-ax2.set_xlabel('temperature')
-ax2.set_ylabel('theta')
+#plot_heatmap(temperature_list, theta_list, magnetization_list)
+plot_quantity_versus_temperature(dict_to_plot_magnetization, 'magnetization')
+plot_quantity_versus_temperature(dict_to_plot_binder_cumm, 'binder-cummulant')
 
-cbar = fig1.colorbar(CS)
-cbar.ax.set_ylabel('magnetization')
+dataframe = pd.DataFrame(pd.read_csv('data_for_binder/temp_T0.800Theta=360L32S22235.dat', dtype=str, skiprows = 1))
 
-plt.savefig('heatmap_mag_versus_T_and_theta.png', dpi=400)
-plt.clf()
-
-'''dict_mag_versus_theta_and_temperature = {}
-
-for index in range(len(theta_list)):
-    if theta_list[index] not in dict_mag_versus_theta_and_temperature[theta_list[index]].keys():
-        dict_mag_versus_theta_and_temperature[theta_list[index]] = [temperature_list[index], magnetization_list[index]]
-    else:
-        dict_mag_versus_theta_and_temperature[theta_list[index]] = [temperature_list[index], magnetization_list[index]]
-
-
-for index in range(len(theta_list)):
-    plt.scatter(temperature_list[index], magnetization_list[index], label = str(theta_list[index]))
-    plt.legend(str(theta_list[index]))
-
-plt.legend(loc='upper right')
-
-plt.savefig('simple_plot.png', dpi = 400)'''
+last_values_for_mean_magnetization = dataframe['M'].iloc[:]
+last_values_for_binder_cummulant   = dataframe['U'].iloc[:]

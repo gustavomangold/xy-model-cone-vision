@@ -28,10 +28,10 @@
 /*****************************************************************************
  *                               DEFINITIONS                                 *
  ****************************************************************************/
-#define 		L			16
+#define 		L			32
 #define 		L2 	 		(L*L)
-#define 		TRAN			100000
-#define 		TMAX			5000
+#define 		TRAN			0
+#define 		TMAX			100000
 #define			N			4.0
 #define 		MIN(a,b) 		(((a)<(b))?(a):(b))
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
 	TEMP = atof(argv[1]) / 100;
 	THETA_DEGREES = atof(argv[2]);
-	THETA = 2*M_PI*(THETA_DEGREES/360);
+	THETA = 2*M_PI*(1.0*THETA_DEGREES/360);
 
 	double *spin;
 	int **neigh;
@@ -147,10 +147,10 @@ void initialize(double *spin, int **neigh)
 
 	for(i=0; i<L2; i++)
 	{
-		neigh[i][0] = (i-L+L2)%L2;              //up
-        neigh[i][1] = (i+1)%L + (i/L)*L;        //right
-        neigh[i][2] = (i+L)%L2;                 //down
-        neigh[i][3] = (i-1+L)%L + (i/L)*L;      //left
+		neigh[i][1] = (i-L+L2)%L2;              //up
+        neigh[i][0] = (i+1)%L + (i/L)*L;        //right
+        neigh[i][3] = (i+L)%L2;                 //down
+        neigh[i][2] = (i-1+L)%L + (i/L)*L;      //left
 	}
 
 	return;
@@ -189,7 +189,7 @@ void calculate_quantities(double *spin, double TEMP){
 
     CV = fabs((ET2 / L2) - (ET / L2)*(ET / L2)) / (TEMP*TEMP);
 
-    printf("mean energy squared per spin = %f, (mean energy) squared per spin = %f \n", (ET2 / L2), (ET / L2)*(ET / L2));
+    //printf("mean energy squared per spin = %f, (mean energy) squared per spin = %f \n", (ET2 / L2), (ET / L2)*(ET / L2));
 }
 
 /*****************************************************************************
@@ -197,7 +197,7 @@ void calculate_quantities(double *spin, double TEMP){
  ****************************************************************************/
 void mc_routine(double *spin, int **neigh, double TEMP)
 {
-	int i, j, t;
+	int i, j, t, total_J, int_flip;
 	double Ei, Ef, G, final_individual_energy;
 	double vi, D_ang, min_ang;
 	double flip;
@@ -207,29 +207,45 @@ void mc_routine(double *spin, int **neigh, double TEMP)
 		i = FRANDOM*L2;
 
 		Ei = 0;
+		total_J  = 0;
 		for(j=0; j<4; j++)
 		{
-			vi = 1+j;
-                        vi = (vi*2*M_PI)/4;
-                        D_ang = fabs(spin[i]-vi);
-                        min_ang = MIN((2*M_PI) -D_ang,D_ang);
+            vi = ((j)*2*M_PI)/4;
+            //printf("spin_i = %lf ", spin[i]);
+            //printf("-->vi_%d = %lf\n", j,vi);
+            D_ang = fabs(spin[i]-vi);
+            min_ang = MIN((2*M_PI) - D_ang,D_ang);
+            //printf("min_ang --> %lf\n", min_ang);
+            //otimizaçao da parte de baixo
+            //J = ((min_ang) < THETA/2);
+            //printf("theta/2 = %lf\n", THETA/2);
 
-                        //otimizaçao da parte de baixo
-                        J = (min_ang < THETA/2);
-
-                            /*if(min_ang < THETA/2)
-                        {
-                                J=1;
-                        }
-                        else
-                        {
-                                J=0;
-                        }*/
-
+            if(min_ang < THETA/2)
+            {
+                    J=1;
+            }
+            else
+            {
+                    J=0;
+            }
+			//printf("J --> %d\n", J);
+			total_J += J;
                         Ei += J*(cos(spin[i]-spin[neigh[i][j]]));
 		}
 
-		flip = (spin[i] + M_PI*(FRANDOM - 0.5));
+		if (total_J > 0) {
+		  //printf("%d \n", total_J);
+		}
+
+		flip = (spin[i] + (2*M_PI)*FRANDOM);
+
+		int_flip = (360 * (flip / (2*M_PI)));
+
+		int_flip = int_flip % 360;
+
+		flip     = (int_flip * 1.0 * (2*M_PI/360));
+
+		//printf("%f \n", flip);
 
 		Ef = 0;
 		for(j=0; j<4; j++)
@@ -281,8 +297,6 @@ void mc_routine(double *spin, int **neigh, double TEMP)
             J = (min_ang < THETA/2);
 
 			final_individual_energy += J * (cos(spin[i]-spin[neigh[i][j]]));
-
-			printf("%f %f %f \n \n", cos(spin[i]-spin[neigh[i][j]]), spin[i]-spin[neigh[i][j]], spin[i]);
 		}
 		ET  += final_individual_energy;
 		ET2 += final_individual_energy * final_individual_energy;

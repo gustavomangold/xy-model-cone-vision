@@ -1,7 +1,7 @@
 #!/bin/bash
-for T in $(seq 10 10 120)
+for T in $(seq 10 30 120)
     do
-    for theta in $(seq 90 30 360)
+    for theta in $(seq 270 30 360)
         do
             echo "$T $theta"
             ./a.out $T $theta $RANDOM

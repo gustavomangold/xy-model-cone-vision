@@ -48,4 +48,28 @@ if(FRANDOM < G)
 	spin[i] = flip;
 }
 ```
-After all _L*L_ samples, 
+After all _L*L_ samples, we calculate the necessary quantities with the ```calculate_quantities(spin, TEMP);``` call. 
+Inside the function, we update the global variables which will be saved on the files.
+
+This completes the transient part. For the stationary part, where we will save the results, we simply do:
+```
+#ifdef DATA
+	char Arq1[100];
+	FILE *arq1;
+
+	sprintf(Arq1, "temp_T%.3lfTheta=%.0lfL%dS%ld.dat", TEMP, atof(argv[2]), L, seed);
+	arq1 = fopen(Arq1, "w");
+	//fprintf(arq1, "#seed = %ld\n#MCS,ET,M,M2,M4,U,ET2,CV,EE\n", seed);
+	fprintf(arq1, "#seed = %ld\n#MCS,M,U\n", seed);
+#endif
+
+	for(mcs=0; mcs<TMAX; mcs++)
+	{
+		mc_routine(spin, neigh, TEMP);
+#ifdef GNU
+        gnuplot_view(mcs,spin);
+#endif
+```
+Saving the files if the -DDATA flag is present and adding a visualization element if the GNU flag is present.
+
+**Note:** the code can be improved and optimized in almost any part, but, as it is in C, it is very forgiving, and will run most basic tests really quickly. For 10^5 steps, it takes ~20seconds in a good enough CPU. If more samples are needed, optimization is recommended.

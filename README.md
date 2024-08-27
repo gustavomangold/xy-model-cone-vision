@@ -78,4 +78,4 @@ Saving the files if the -DDATA flag is present and adding a visualization elemen
 
 _**1.**_ The code can be improved and optimized in almost any part, but, as it is in C, it is very forgiving, and will run most basic tests really quickly. For 10^5 steps, it takes ~20seconds in a good enough CPU. If more samples are needed, optimization is recommended.
 
-**2.**__ The temperature is set at TEMP/100 inside the code, as not to use floats in the _bash generate_data.sh_ script, so, when running ./a.out, use TEMP*100. Example: if T=0.1 is needed, with angle THETA=180 and SEED=42, use ./a.out 10 180 42.
+_**2.**_ The temperature is set at TEMP/100 inside the code, as not to use floats in the _bash generate_data.sh_ script, so, when running ./a.out, use TEMP*100. Example: if T=0.1 is needed, with angle THETA=180 and SEED=42, use ./a.out 10 180 42.

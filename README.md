@@ -1,8 +1,6 @@
 # XY model with cone vision code - Mini Documentation
 
-!(https://github.com/gustavomangold/xy-model-metropolis-cone-vision/blob/main/readme_images/heatmap_mag_versus_T_and_theta.png)
-
-![alt text](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
+https://github.com/gustavomangold/xy-model-metropolis-cone-vision/blob/main/readme_images/heatmap_mag_versus_T_and_theta.png?raw=true
 
 This repository consists of code written using the paper _Long-range Order and Directional Defect Propagation in the Nonreciprocal XY
 Model with Vision Cone Interactions_, Loos et. al.. as a basis.

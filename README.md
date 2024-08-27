@@ -1,6 +1,6 @@
 # XY model with cone vision code - Mini Documentation
 
-![Contour Plot]((https://github.com/gustavomangold/xy-model-metropolis-cone-vision/tree/main/readme_images/heatmap_mag_versus_T_and_Theta.jpg?raw=true)
+!(https://github.com/gustavomangold/xy-model-metropolis-cone-vision/blob/main/readme_images/heatmap_mag_versus_T_and_theta.png)
 
 ![alt text](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
 

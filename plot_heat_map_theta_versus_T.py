@@ -13,8 +13,8 @@ def plot_quantity_versus_temperature(dict_key_is_theta, quantity_id: str, show_l
         plt.xlabel('T')
         plt.ylabel(r'$1-\frac{\langle m^4\rangle}{3\langle m^2\rangle^2}$')
     else:
-        #plt.xlim(0.1, 1.2)
-        plt.ylim(0.11, 1.01)
+        plt.xlim(0.1, 1.2)
+        plt.ylim(0., 1.01)
         plt.title('Magnetization for $L=32$')
         plt.xlabel('T')
         plt.ylabel(r'$\langle m \rangle$')

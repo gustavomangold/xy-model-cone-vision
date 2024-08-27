@@ -24,7 +24,7 @@ The -DDATA flag will tell the program to save all the required data for the _TMA
 ```
 The process of simulation occurs as it is defined in the ```main()``` function. 
 After allocating space for each spin and initializing them randomly, as well defining its neighbours inside the function  ``` void initialize ```, we then loop through all transiente Monte Carlo steps, iterating inside ```void mc_routine```, which in turn samples _L*L_ spins.
-Each spin sampled has its energy calculated, and then a new value is randomly assigned to its orientation, with:
+Each spin sampled has its energy _Ei_ calculated, and then a new value is randomly assigned to its orientation, with:
 ```  
 flip = (spin[i] + (2*M_PI)*FRANDOM);
 
@@ -37,7 +37,7 @@ flip     = (int_flip * 1.0 * (2*M_PI/360));
 
 In the first line the random spin is sampled uniformly, and the three extra steps are done in order to rotate it back to the (0, 2pi] interval, in order to maintain consistency and prevent future work when printing states and comparing angles for the cone vision inequalities.
 
-Then, we calculate the energy of the new spin and accept it with probability _G_, given by:
+Then, we calculate the energy _Ef_ of the new spin and accept it with probability _G_, given by:
 ```
 dE = Ei-Ef;
 
@@ -48,3 +48,4 @@ if(FRANDOM < G)
 	spin[i] = flip;
 }
 ```
+After all _L*L_ samples, 

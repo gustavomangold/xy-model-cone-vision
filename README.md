@@ -15,7 +15,7 @@ The python program outputs only magnetizations, as it is more for testing the im
 This version is a lot faster, and should be used for running the actual simulations. 
 The implementation consists of two different files, one legacy header _mc.h_ that has Monte Carlo functions and the _xycone.c_ file, which implements the actual simulation.
 
-Compilation should be done with gcc, using the command _gcc -DDATA -Wall c-version/xy_cone.c -lm -O3_ and then ran with ./a.out TEMP THETA (degrees) SEED.
+Compilation should be done with gcc, using the command _gcc -DDATA -Wall c-version/xy_cone.c -lm -O3_ and then ran with ./a.out TEMP THETA (degrees) SEED (see second note).
 The -DDATA flag will tell the program to save all the required data for the _TMAX_ steps (which will run after the transient steps, defined as _TRAN_). In the code, it currently consists only of the MCS, the magnetization and the Binder cummulant, but can save anything that's updated throughout runtime.
 
 ```
@@ -74,4 +74,6 @@ This completes the transient part. For the stationary part, where we will save t
 ```
 Saving the files if the -DDATA flag is present and adding a visualization element if the GNU flag is present.
 
-**Note:** the code can be improved and optimized in almost any part, but, as it is in C, it is very forgiving, and will run most basic tests really quickly. For 10^5 steps, it takes ~20seconds in a good enough CPU. If more samples are needed, optimization is recommended.
+**Notes:** 
+_**1.**_ The code can be improved and optimized in almost any part, but, as it is in C, it is very forgiving, and will run most basic tests really quickly. For 10^5 steps, it takes ~20seconds in a good enough CPU. If more samples are needed, optimization is recommended.
+**2. **__The temperature is set at TEMP/100 inside the code, as not to use floats in the _bash generate_data.sh_ script, so, when running ./a.out, use TEMP*100. Example: if T=0.1 is needed, with angle THETA=180 and SEED=42, use ./a.out 10 180 42.

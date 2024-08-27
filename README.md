@@ -3,7 +3,9 @@
 ![Contour plot for one sample.](https://raw.githubusercontent.com/gustavomangold/xy-model-metropolis-cone-vision/main/readme_images/heatmap_mag_versus_T_and_theta.png)
 
 This repository consists of code written using the paper _Long-range Order and Directional Defect Propagation in the Nonreciprocal XY
-Model with Vision Cone Interactions_, Loos et. al.. as a basis.
+Model with Vision Cone Interactions_, Loos et. al.. as a basis. It was used for a physics graduate program class in Monte Carlo simulations, in which the final paper (written in Portuguese) is present in this repository. 
+
+Repo authors are Gustavo Mangold, Pedro H. Mendes and Leonardo S. Ferreira.
 
 ## Python implementation
 

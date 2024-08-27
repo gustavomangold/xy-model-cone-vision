@@ -6,6 +6,16 @@ import io
 import glob
 
 def get_correlation(data, d):
+    '''
+    Calculate the average spin-spin correlation
+
+    Args:
+    data (np.array): Configuration Snapshot
+    d (int): Max distance
+
+    Returns:
+     (float): Average correlation
+    '''
     correlation = 0
 
     for index in range(len(data)):
@@ -13,14 +23,24 @@ def get_correlation(data, d):
         angle_of_next = float(data[(index + d) % len(data)])
 
         correlation += np.dot(np.array(np.cos(angle_of_spin), np.sin(angle_of_spin)),
-            np.array(np.cos(angle_of_next), np.sin(angle_of_next)))
+                              np.array(np.cos(angle_of_next), np.sin(angle_of_next)))
 
     return correlation / len(data)
 
-def get_lists_to_plot(adress_to_open):
+def get_lists_to_plot(address_to_open):
+    '''
+    Calculate the average correlation for many configurations
+
+    Args:
+    address_to_open (str): Path of configurations
+
+    Returns:
+    x_to_plot (list): List of distance
+    y_to_plot (list): List of Average correlation as a function of distance
+    '''
     list_of_angles = []
 
-    with io.open(adress_to_open, mode="r", encoding="utf-8") as f:
+    with io.open(address_to_open, mode="r", encoding="utf-8") as f:
         for line in f:
             list_of_angles.append(line.split())
 
@@ -35,9 +55,7 @@ def get_lists_to_plot(adress_to_open):
 
     return x_to_plot, y_to_plot
 
-#path = "./corr/315/"
 path = "./data_new_version/corr/"
-
 colormap = ['red', 'blue', 'cyan', 'black', 'green', 'grey', 'hotpink']
 markers  = ['1', 'p', 'o', 'v', '^', '>', '*']
 
@@ -49,7 +67,7 @@ for filename in glob.glob(path + '/finalconfig_T*L32A' + angle + '*.dat'):
         if 'T' + '{:.3f}'.format(temp) in filename:
             x, y = get_lists_to_plot(filename)
             plt.scatter(x, y, label = r'$T=$' + '{:.1f}'.format(temp), marker = markers[index % len(markers)],
-                color = colormap[index % len(colormap)])
+                        color = colormap[index % len(colormap)])
             plt.plot(x, y, alpha = 0.2, color = colormap[index % len(colormap)])
         index += 1
 

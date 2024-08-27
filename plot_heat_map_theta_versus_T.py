@@ -6,6 +6,17 @@ import matplotlib.pyplot as plt
 from   matplotlib import cm
 
 def plot_quantity_versus_temperature(dict_key_is_theta, quantity_id: str, show_label: bool):
+    '''
+    Plot the observable as a function of temperature
+
+    Args:
+    dict_key_is_theta (dict): Dictionary that contains the data to plot
+    quantity_id (str): Figure filename
+    show_label (bool): Show label
+
+    Returns:
+    (void)
+    '''
     if quantity_id == 'binder-cummulant':
         plt.ylim(0.6, 0.75)
         plt.xlim(0.3, 1.0)
@@ -13,8 +24,8 @@ def plot_quantity_versus_temperature(dict_key_is_theta, quantity_id: str, show_l
         plt.xlabel('T')
         plt.ylabel(r'$1-\frac{\langle m^4\rangle}{3\langle m^2\rangle^2}$')
     else:
-        plt.xlim(0.1, 1.2)
-        plt.ylim(0., 1.01)
+        #plt.xlim(0.1, 1.2)
+        plt.ylim(0.11, 1.01)
         plt.title('Magnetization for $L=32$')
         plt.xlabel('T')
         plt.ylabel(r'$\langle m \rangle$')
@@ -35,8 +46,20 @@ def plot_quantity_versus_temperature(dict_key_is_theta, quantity_id: str, show_l
     plt.savefig(quantity_id + '.png', dpi = 400)
     plt.clf()
 
-def plot_heatmap(temperature_list, theta_list, magnetization_list):
+    return
 
+def plot_heatmap(temperature_list, theta_list, magnetization_list):
+    '''
+    Plot the heatmap
+
+    Args:
+    temperature_list (list): Temperature Data
+    theta_list (list): Theta Data
+    magnetization_list (list): Magnetization Data
+
+    Returns:
+    (void)
+    '''
     x = np.array(temperature_list)
     y = np.array(theta_list)
     z = np.array(magnetization_list)
@@ -57,7 +80,21 @@ def plot_heatmap(temperature_list, theta_list, magnetization_list):
     plt.savefig('heatmap_mag_versus_T_and_theta.png', dpi=400)
     plt.clf()
 
+    return
+
 def get_data_for_heatmap(filename):
+    '''
+    Get the data to plot the heatmap
+
+    Args:
+    filename (str): Filename to obtain the data
+
+    Returns:
+    theta (float): Theta value
+    temperature (float): Temperature value
+    mean_magnetization (float): Average magnetization value
+    mean_binder_cummulant (float): Average Binder cummulant value
+    '''
     total_values_for_mean = 5000
     mean_magnetization    = 0
     mean_binder_cummulant = 0

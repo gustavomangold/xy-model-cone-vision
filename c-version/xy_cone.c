@@ -1,7 +1,6 @@
 /*****************************************************************************
  *			         XY Model 2D			             *
  *			       Cone Interactions			     *
- *			        Pedro H Mendes 			             *
  ****************************************************************************/
 /*****************************************************************************
  *	Compile:							     *
@@ -48,9 +47,9 @@ double THETA;
  ****************************************************************************/
 void initialize(double *spin, int **neigh);
 void mc_routine(double *spin, int **neigh, double TEMP);
+void calculate_quantities(double *spin, int **neigh, double TEMP);
 void print_states(double *spin, double TEMP, int choice);
 void gnuplot_view(int tempo, double *spin);
-void calculate_quantities(double *spin, double TEMP);
 
 /*****************************************************************************
  *                             MAIN PROGRAM                                  *
@@ -85,7 +84,6 @@ int main(int argc, char *argv[])
 	for(mcs=0; mcs<TRAN; mcs++)
 	{
 		mc_routine(spin, neigh, TEMP);
-
 	}
 
 #ifdef DATA
@@ -101,6 +99,7 @@ int main(int argc, char *argv[])
 	for(mcs=0; mcs<TMAX; mcs++)
 	{
 		mc_routine(spin, neigh, TEMP);
+		calculate_quantities(spin, neigh, TEMP);
 #ifdef GNU
         gnuplot_view(mcs,spin);
 #endif
@@ -147,49 +146,13 @@ void initialize(double *spin, int **neigh)
 
 	for(i=0; i<L2; i++)
 	{
+        	neigh[i][0] = (i+1)%L + (i/L)*L;        //right
 		neigh[i][1] = (i-L+L2)%L2;              //up
-        neigh[i][0] = (i+1)%L + (i/L)*L;        //right
-        neigh[i][3] = (i+L)%L2;                 //down
-        neigh[i][2] = (i-1+L)%L + (i/L)*L;      //left
+        	neigh[i][2] = (i-1+L)%L + (i/L)*L;      //left
+	        neigh[i][3] = (i+L)%L2;                 //down
 	}
 
 	return;
-}
-
-/*****************************************************************************
- *                     	      CALCULATE QUANTITIES                           *
- ****************************************************************************/
-void calculate_quantities(double *spin, double TEMP){
-    // eu sou jesus
-    double sum_sines = 0;
-    double sum_cosines = 0;
-    double sum_sines_squared = 0;
-    double sum_cosines_squared = 0;
-    double sum_sines_fourth = 0;
-    double sum_cosines_fourth = 0;
-    int    i;
-
-    for(i = 0; i < L2; i++){
-      sum_sines           += sin(spin[i]);
-      sum_cosines         += cos(spin[i]);
-
-      sum_sines_squared   += sin(spin[i]) * sin(spin[i]);
-      sum_cosines_squared += cos(spin[i]) * cos(spin[i]);
-
-      sum_sines_fourth    += sin(spin[i]) * sin(spin[i]) * sin(spin[i]) * sin(spin[i]);
-      sum_cosines_fourth  += cos(spin[i]) * cos(spin[i]) * cos(spin[i]) * cos(spin[i]);
-    }
-
-    M  = sqrt(sum_sines*sum_sines + sum_cosines * sum_cosines) / L2;
-    M2 = sqrt(sum_sines_squared*sum_sines_squared + sum_cosines_squared*sum_cosines_squared) / (L2);
-    M4 = sqrt(sum_sines_fourth*sum_sines_fourth + sum_cosines_fourth*sum_cosines_fourth) / (L2);
-
-    //binder cummulant
-    U  = 1 - (M4)/(3 * M2*M2);
-
-    CV = fabs((ET2 / L2) - (ET / L2)*(ET / L2)) / (TEMP*TEMP);
-
-    //printf("mean energy squared per spin = %f, (mean energy) squared per spin = %f \n", (ET2 / L2), (ET / L2)*(ET / L2));
 }
 
 /*****************************************************************************
@@ -197,8 +160,8 @@ void calculate_quantities(double *spin, double TEMP){
  ****************************************************************************/
 void mc_routine(double *spin, int **neigh, double TEMP)
 {
-	int i, j, t, total_J, int_flip;
-	double Ei, Ef, G, final_individual_energy;
+	int i, j, t, int_flip;
+	double Ei, Ef, G;
 	double vi, D_ang, min_ang;
 	double flip;
 
@@ -207,65 +170,45 @@ void mc_routine(double *spin, int **neigh, double TEMP)
 		i = FRANDOM*L2;
 
 		Ei = 0;
-		total_J  = 0;
 		for(j=0; j<4; j++)
 		{
-            vi = ((j)*2*M_PI)/4;
-            //printf("spin_i = %lf ", spin[i]);
-            //printf("-->vi_%d = %lf\n", j,vi);
-            D_ang = fabs(spin[i]-vi);
-            min_ang = MIN((2*M_PI) - D_ang,D_ang);
-            //printf("min_ang --> %lf\n", min_ang);
-            //otimizaçao da parte de baixo
-            //J = ((min_ang) < THETA/2);
-            //printf("theta/2 = %lf\n", THETA/2);
+	        	vi = (j*2*M_PI)/4;
+            		D_ang = fabs(spin[i]-vi);
+            		min_ang = MIN((2*M_PI) - D_ang,D_ang);
 
-            if(min_ang < THETA/2)
-            {
-                    J=1;
-            }
-            else
-            {
-                    J=0;
-            }
-			//printf("J --> %d\n", J);
-			total_J += J;
-                        Ei += J*(cos(spin[i]-spin[neigh[i][j]]));
-		}
+		        if(min_ang < THETA/2)
+            		{
+                    		J=1;
+            		}
+            		else
+            		{
+                    		J=0;
+            		}
 
-		if (total_J > 0) {
-		  //printf("%d \n", total_J);
+			Ei += J*(cos(spin[i]-spin[neigh[i][j]]));
 		}
 
 		flip = (spin[i] + (2*M_PI)*FRANDOM);
-
 		int_flip = (360 * (flip / (2*M_PI)));
-
 		int_flip = int_flip % 360;
-
 		flip     = (int_flip * 1.0 * (2*M_PI/360));
 
-		//printf("%f \n", flip);
 
 		Ef = 0;
 		for(j=0; j<4; j++)
 		{
-			vi = 1+j;
-                        vi = (vi*2*M_PI)/4;
+                        vi = (j*2*M_PI)/4;
                         D_ang = fabs(flip-vi);
                         min_ang = MIN((2*M_PI) -D_ang,D_ang);
 
-                        //otimizaçao da parte de baixo
-                        J = (min_ang < THETA/2);
-
-                            /*if(min_ang < THETA/2)
+                        if(min_ang < THETA/2)
                         {
                                 J=1;
                         }
                         else
                         {
                                 J=0;
-                        }*/
+                        }
 
                         Ef += J*(cos(flip-spin[neigh[i][j]]));
 		}
@@ -280,31 +223,76 @@ void mc_routine(double *spin, int **neigh, double TEMP)
 		}
 	}
 
+
+	return;
+}
+
+/*****************************************************************************
+ *                     	      CALCULATE QUANTITIES                           *
+ ****************************************************************************/
+void calculate_quantities(double *spin, int **neigh, double TEMP)
+{
+
+	double sum_sines = 0;
+	double sum_cosines = 0;
+    	double sum_sines_squared = 0;
+    	double sum_cosines_squared = 0;
+    	double sum_sines_fourth = 0;
+    	double sum_cosines_fourth = 0;
+ 	double vi, D_ang, min_ang, final_individual_energy;
+	int i, j;
+
 	ET  = 0;
 	ET2 = 0;
 
 	for(i=0; i<L2; i++)
 	{
-	    final_individual_energy = 0;
+		final_individual_energy = 0;
 		for(j=0;j<4;j++)
 		{
-			vi = 1+j;
-			vi = (vi*2*M_PI)/4;
+			vi = (j*2*M_PI)/4;
 			D_ang = fabs(spin[i]-vi);
 			min_ang = MIN((2*M_PI) -D_ang,D_ang);
 
-			//otimizaçao
-            J = (min_ang < THETA/2);
+		        if(min_ang < THETA/2)
+            		{
+                    		J=1;
+            		}
+            		else
+            		{
+                    		J=0;
+            		}
 
 			final_individual_energy += J * (cos(spin[i]-spin[neigh[i][j]]));
 		}
+
 		ET  += final_individual_energy;
 		ET2 += final_individual_energy * final_individual_energy;
 	}
 
 	EE = ET * ET;
 
-	calculate_quantities(spin, TEMP);
+
+    	for(i = 0; i < L2; i++)
+	{
+      		sum_sines           += sin(spin[i]);
+      		sum_cosines         += cos(spin[i]);
+
+      		sum_sines_squared   += sin(spin[i]) * sin(spin[i]);
+      		sum_cosines_squared += cos(spin[i]) * cos(spin[i]);
+
+      		sum_sines_fourth    += sin(spin[i]) * sin(spin[i]) * sin(spin[i]) * sin(spin[i]);
+      		sum_cosines_fourth  += cos(spin[i]) * cos(spin[i]) * cos(spin[i]) * cos(spin[i]);
+    	}
+
+    	M  = sqrt(sum_sines*sum_sines + sum_cosines * sum_cosines) / L2;
+    	M2 = sqrt(sum_sines_squared*sum_sines_squared + sum_cosines_squared*sum_cosines_squared) / (L2);
+    	M4 = sqrt(sum_sines_fourth*sum_sines_fourth + sum_cosines_fourth*sum_cosines_fourth) / (L2);
+
+   	//binder cummulant
+    	U  = 1 - (M4)/(3 * M2*M2);
+
+    	CV = fabs((ET2 / L2) - (ET / L2)*(ET / L2)) / (TEMP*TEMP);
 
 	return;
 }
@@ -314,36 +302,45 @@ void mc_routine(double *spin, int **neigh, double TEMP)
  ****************************************************************************/
 void print_states(double *spin, double TEMP, int choice)
 {
-        int i;
+        int i,j ;
 
         if(choice == 0)
-                {
-                        char fp[100];
-                        FILE *fp1;
+        {
+        	char fp[100];
+                FILE *fp1;
 		sprintf(fp, "finalconfig_T%.3lfL%dA%dS%ld.dat", TEMP, L, THETA_DEGREES, seed);
-                        fp1 = fopen(fp, "w");
+                fp1 = fopen(fp, "w");
 
 		for(i=0; i<L2; i++)
 		{
 			fprintf(fp1, "%f ", spin[i]);
 		}
 
-        /*
-		esse jeito printa em formato LxL quadrado
-                        for(i=0; i<L; i++)
-                        {
-			for(j=0; j<L; j++)
-                                {
-                                        fprintf(fp1, "%f ", spin[i + j*L]);
-                                }
-                                fprintf(fp1, "\n");
-                        }
-        */
+        	fclose(fp1);
+	}
 
-                        fclose(fp1);
+        if(choice == 1)
+        {
+        	char fp[100];
+                FILE *fp1;
+		sprintf(fp, "finalconfig_T%.3lfL%dA%dS%ld.dat", TEMP, L, THETA_DEGREES, seed);
+                fp1 = fopen(fp, "w");
+
+
+                for(i=0; i<L; i++)
+                {
+			for(j=0; j<L; j++)
+                        {
+                        	fprintf(fp1, "%f ", spin[i + j*L]);
+                        }
+
+                        fprintf(fp1, "\n");
                 }
 
-               	return;
+        	fclose(fp1);
+	}
+
+       return;
 }
 
 /**************************************************************************

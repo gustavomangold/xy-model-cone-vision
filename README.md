@@ -1,6 +1,9 @@
 # XY model with cone vision code - Mini Documentation
 
-![image](https://raw.githubusercontent.com/gustavomangold/xy-model-metropolis-cone-vision/main/readme_images/magnetization.png)
+![Magnetization for one sample and different thetas.](https://raw.githubusercontent.com/gustavomangold/xy-model-metropolis-cone-vision/main/readme_images/magnetization.png)
+
+
+![Contour plot for one sample.](https://raw.githubusercontent.com/gustavomangold/xy-model-metropolis-cone-vision/main/readme_images/heatmap_mag_versus_T_and_theta.png.png)
 
 This repository consists of code written using the paper _Long-range Order and Directional Defect Propagation in the Nonreciprocal XY
 Model with Vision Cone Interactions_, Loos et. al.. as a basis.

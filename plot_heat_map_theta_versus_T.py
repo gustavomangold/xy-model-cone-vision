@@ -2,34 +2,34 @@ import pandas as pd
 import numpy as np
 import glob
 import re
-import scipy.interpolate
 import matplotlib.pyplot as plt
 from   matplotlib import cm
 
-def plot_quantity_versus_temperature(dict_key_is_theta, quantity_id: str):
+def plot_quantity_versus_temperature(dict_key_is_theta, quantity_id: str, show_label: bool):
     if quantity_id == 'binder-cummulant':
-        plt.ylim(0.63, 0.67)
+        plt.ylim(0.6, 0.75)
         plt.xlim(0.3, 1.0)
         plt.title('Binder Cummulant for L=32')
         plt.xlabel('T')
-        plt.ylabel('1-<m^4>/(3<m^2>^2)')
+        plt.ylabel(r'$1-\frac{\langle m^4\rangle}{3\langle m^2\rangle^2}$')
     else:
-        plt.xlim(0.25, 1.2)
-        plt.ylim(0.05, 1.05)
-        plt.title('Magnetization for L=32')
+        #plt.xlim(0.1, 1.2)
+        plt.ylim(0.11, 1.01)
+        plt.title('Magnetization for $L=32$')
         plt.xlabel('T')
-        plt.ylabel('<m>')
+        plt.ylabel(r'$\langle m \rangle$')
 
-    colormap = ['red', 'blue', 'cyan', 'black']
-    markers  = ['*', 'p', 'o', 'v']
+    colormap = ['red', 'blue', 'cyan', 'black', 'green', 'grey', 'hotpink']
+    markers  = ['1', 'p', 'o', 'v', '^', '>', '*']
 
     index = 0
-    for theta in dict_key_is_theta.keys():
-        if not theta % 45 and len(dict_key_is_theta[theta]) > 50:
+    for theta in np.sort(np.array(list(dict_key_is_theta.keys()))):
+        if not theta % 45 and len(dict_key_is_theta[theta]):
             plt.scatter(*zip(*dict_key_is_theta[theta]), marker = markers[index % len(markers)],
                 color = colormap[index % len(colormap)], label = 'Cone angle: ' + str(theta) + 'º')
             #plt.plot(*zip(*dict_key_is_theta[theta]), marker = 'o', color = color, alpha = 0.4)
-            plt.legend(fontsize = 'small')
+            if show_label:
+                plt.legend(fontsize = 'small')
             index += 1
 
     plt.savefig(quantity_id + '.png', dpi = 400)
@@ -44,10 +44,13 @@ def plot_heatmap(temperature_list, theta_list, magnetization_list):
     plt.xlim(0.1, 1.15)
     plt.ylim(90, 360)
 
+    plt.xlabel('T')
+    plt.ylabel(r'$\theta$')
+
     plt.yticks(np.arange(90, 365, 45))
     plt.gca().invert_yaxis()
 
-    plt.tricontourf(x, y, z, levels = 50)
+    plt.tricontourf(x, y, z, levels = 50, cmap = 'jet')
     cbar = plt.colorbar()
     cbar.set_ticks(np.arange(0, 1.1, 0.1))
 
@@ -94,7 +97,7 @@ list_of_filenames = []
 # essa parte procura por todos os arquivos na pasta
 # a variavel seedless_filename serve pra tirar simulações com mesma seed
 # pq eh pra ser uma amostra e tem simulaçao repetida
-for filename in glob.glob("data/temp_T0.002Theta\=90L32S231.dat"):
+for filename in glob.glob("data_new_version/*.dat"):
     seedless_filename = filename.split('S', 1)[0]
 
     if seedless_filename not in list_of_filenames:
@@ -115,6 +118,6 @@ for filename in glob.glob("data/temp_T0.002Theta\=90L32S231.dat"):
                 dict_to_plot_magnetization[theta] = [[temperature, mean_magnetization]]
                 dict_to_plot_binder_cumm[theta]   = [[temperature, binder_cummulant]]
 
-#plot_heatmap(temperature_list, theta_list, magnetization_list)
-plot_quantity_versus_temperature(dict_to_plot_magnetization, 'magnetization')
-#plot_quantity_versus_temperature(dict_to_plot_binder_cumm, 'binder-cummulant')
+plot_heatmap(temperature_list, theta_list, magnetization_list)
+plot_quantity_versus_temperature(dict_to_plot_magnetization, 'magnetization', show_label = True)
+plot_quantity_versus_temperature(dict_to_plot_binder_cumm, 'binder-cummulant', show_label = True)
